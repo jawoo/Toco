@@ -556,73 +556,80 @@ public class App
                 Iterable<CSVRecord> records = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
                 for (CSVRecord record : records)
                 {
-
-                    // Parse the cultivar code from TNAM
-                    String cropCultivarCode = record.get("CR") + record.get("TNAM").substring(0, 6);
-
-                    // Parse PDAT and ADAT for computing the "days to flowering"
-                    int dtf, dth, pDDD = 0, aDDD = 0, hDDD = 0;
-                    if (record.get("PDAT").length() > 4)
-                        pDDD = Integer.parseInt(record.get("PDAT").substring(4));
-                    if (record.get("ADAT").length() > 4)
-                        aDDD = Integer.parseInt(record.get("ADAT").substring(4));
-                    if (record.get("HDAT").length() > 4)
-                        hDDD = Integer.parseInt(record.get("HDAT").substring(4));
-                    if (pDDD>0 && aDDD>0 && hDDD>0)
+                    try
                     {
 
-                        // Flowering date
-                        if (aDDD > pDDD)
-                            dtf = aDDD - pDDD + 1;
-                        else
-                            dtf = aDDD + (365 - pDDD) + 1;
+                        // Parse the cultivar code from TNAM
+                        String cropCultivarCode = record.get("CR") + record.get("TNAM").substring(0, 6);
 
-                        // Harvest date
-                        if (hDDD > pDDD)
-                            dth = hDDD - pDDD + 1;
-                        else
-                            dth = hDDD + (365 - pDDD) + 1;
-
-                        //System.out.println(dtf+", "+dth);
-
-                        // Storing
-                        try
+                        // Parse PDAT and ADAT for computing the "days to flowering"
+                        int dtf, dth, pDDD = 0, aDDD = 0, hDDD = 0;
+                        if (record.get("PDAT").length() > 4)
+                            pDDD = Integer.parseInt(record.get("PDAT").substring(4));
+                        if (record.get("ADAT").length() > 4)
+                            aDDD = Integer.parseInt(record.get("ADAT").substring(4));
+                        if (record.get("HDAT").length() > 4)
+                            hDDD = Integer.parseInt(record.get("HDAT").substring(4));
+                        if (pDDD>0 && aDDD>0 && hDDD>0)
                         {
-                            if (dtf>0 && dth>0 && dtf<dth)
+
+                            // Flowering date
+                            if (aDDD > pDDD)
+                                dtf = aDDD - pDDD + 1;
+                            else
+                                dtf = aDDD + (365 - pDDD) + 1;
+
+                            // Harvest date
+                            if (hDDD > pDDD)
+                                dth = hDDD - pDDD + 1;
+                            else
+                                dth = hDDD + (365 - pDDD) + 1;
+
+                            //System.out.println(dtf+", "+dth);
+
+                            // Storing
+                            try
                             {
-                                if (dtfMap.containsKey(cropCultivarCode))
+                                if (dtf>0 && dth>0 && dtf<dth)
                                 {
-                                    // DTF
-                                    ArrayList<Object> dtfValues = (ArrayList<Object>)dtfMap.get(cropCultivarCode);
-                                    dtfValues.add(dtf);
-                                    dtfMap.put(cropCultivarCode, dtfValues);
+                                    if (dtfMap.containsKey(cropCultivarCode))
+                                    {
+                                        // DTF
+                                        ArrayList<Object> dtfValues = (ArrayList<Object>)dtfMap.get(cropCultivarCode);
+                                        dtfValues.add(dtf);
+                                        dtfMap.put(cropCultivarCode, dtfValues);
 
-                                    // DTH
-                                    ArrayList<Object> dthValues = (ArrayList<Object>)dthMap.get(cropCultivarCode);
-                                    dthValues.add(dth);
-                                    dthMap.put(cropCultivarCode, dthValues);
-                                }
-                                else
-                                {
-                                    // DTF
-                                    ArrayList<Object> dtfValues = new ArrayList<>();
-                                    dtfValues.add(dtf);
-                                    dtfMap.put(cropCultivarCode, dtfValues);
+                                        // DTH
+                                        ArrayList<Object> dthValues = (ArrayList<Object>)dthMap.get(cropCultivarCode);
+                                        dthValues.add(dth);
+                                        dthMap.put(cropCultivarCode, dthValues);
+                                    }
+                                    else
+                                    {
+                                        // DTF
+                                        ArrayList<Object> dtfValues = new ArrayList<>();
+                                        dtfValues.add(dtf);
+                                        dtfMap.put(cropCultivarCode, dtfValues);
 
-                                    // DTH
-                                    ArrayList<Object> dthValues = new ArrayList<>();
-                                    dthValues.add(dth);
-                                    dthMap.put(cropCultivarCode, dthValues);
+                                        // DTH
+                                        ArrayList<Object> dthValues = new ArrayList<>();
+                                        dthValues.add(dth);
+                                        dthMap.put(cropCultivarCode, dthValues);
+                                    }
+
                                 }
 
                             }
-
+                            catch (Exception ex)
+                            {
+                                ex.printStackTrace();
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
 
+                    }
+                    catch(Exception ex)
+                    {
+                        System.out.println("> Parsing error: "+csvFileName);
                     }
 
                 } // For each row in the CSV file
@@ -742,7 +749,19 @@ public class App
 
                         // Weather file and planting date
                         String weatherKey = wth.split("\\.")[0] + "_" + season + "_" + cropCode;
-                        int p = (int)plantingDatesToSimulate.get(weatherKey);
+                        int p = fixedPlantingDate;
+                        if (!useFixedPlantingDate)
+                        {
+                            try
+                            {
+                                p = (int)plantingDatesToSimulate.get(weatherKey);
+                            }
+                            catch(Exception e)
+                            {
+                                p = fixedPlantingDate;
+                                System.out.println("> Default planting date used for "+cropCultivarCode);
+                            }
+                        }
                         Object[] weatherAndPlantingDate = { wth, p };
 
                         // Multiple threads
