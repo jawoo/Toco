@@ -64,6 +64,8 @@ public class App
     static boolean[] switchScenarios = new boolean[7];
     static boolean scenarioCombinations = true;
     static boolean useRecommendedNitrogenFertilizerRate = true;
+    static boolean useFixedPlantingDate = false;
+    static int fixedPlantingDate = 135;
     static Object[] nitrogenFertilizerRates;
     static Object[] atmosphericCO2Values;
 
@@ -131,6 +133,11 @@ public class App
             switchScenarios[4] = scenarioSwitches.get("plantingWindow") > 0;
             switchScenarios[5] = scenarioSwitches.get("plantingDensity") > 0;
             switchScenarios[6] = scenarioSwitches.get("CO2fertilization") > 0;
+
+            // Access nested elements for planting date options
+            Map<String, Integer> plantingDateOptions = (Map<String, Integer>)config.get("plantingDateOptions");
+            useFixedPlantingDate = plantingDateOptions.get("useFixedPlantingDate") > 0;
+            fixedPlantingDate = plantingDateOptions.get("fixedPlantingDate");
 
         }
         catch (FileNotFoundException e)
@@ -214,7 +221,7 @@ public class App
                 FileUtils.cleanDirectory(new File(directoryMultiplePlatingDates));
                 FileUtils.cleanDirectory(new File(directoryFloweringDates));
                 FileUtils.cleanDirectory(new File(directoryInputPlatingDates));
-                //FileUtils.cleanDirectory(new File(directoryFinal));
+                FileUtils.cleanDirectory(new File(directoryFinal));
             }
 
         } //if (step1)
@@ -268,62 +275,76 @@ public class App
             4. SEASONAL RUNS
             */
             System.out.println("> Running seasonal simulations...");
-            runSeasonalSimulations(unitInfo, weatherInfo, plantingDatesToSimulate, climateOption, daysToFloweringByCultivar, firstPlantingYear, co2History);
-
-
-            /*
-            5. WRAPPING UP
-            */
-            if (step5)
+            for (String wth: weatherInfo)
             {
-                boolean firstFile = true;
-                String[] outputFileNames = getFileNames(directoryOutput, "_"+climateOption);
-                Date date = new Date();
-                long timeStamp = date.getTime();
+                runSeasonalSimulations(unitInfo, wth, plantingDatesToSimulate, climateOption, daysToFloweringByCultivar, firstPlantingYear, co2History);
 
-                // Write
-                try
+                /*
+                5. WRAPPING UP
+                */
+                if (step5)
                 {
-                    String combinedOutput = directoryFinal+"toucan_combinedoutput_"+climateOption+"_"+timeStamp+".csv";
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(combinedOutput));
+                    boolean firstFile = true;
+                    String[] outputFileNames = getFileNames(directoryOutput, "_"+climateOption);
+                    Date date = new Date();
+                    long timeStamp = date.getTime();
 
-                    // Looping through the files
-                    String header;
-                    for (String outputFileName: outputFileNames)
+                    // Write
+                    try
                     {
-                        BufferedReader reader = new BufferedReader(new FileReader(directoryOutput+outputFileName));
-                        String line;
+                        String wthCode = wth.split("[.]")[0];
+                        String combinedOutput = directoryFinal+"toco_combinedOutput_"+climateOption+"_"+wthCode+"_"+timeStamp+".csv";
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(combinedOutput));
 
-                        // To skip the header from the second file
-                        if (firstFile)
+                        // Looping through the files
+                        String header;
+                        for (String outputFileName: outputFileNames)
                         {
-                            header = reader.readLine()
-                                    .replace("SOIL_ID","SoilProfileID")
-                                    .replace("LATI","LAT")
-                                    .replace("TNAM","TNAM,WeatherSequence")
-                                    .replace("CR","CropCode")
-                                    .replace("FNAM","CultivarCode");     // Replace SOIL_ID with SoilProfileID
-                            writer.append(header).append(nr);
-                            firstFile = false;
-                        }
+                            BufferedReader reader = new BufferedReader(new FileReader(directoryOutput+outputFileName));
+                            String line;
 
-                        // Reader --> Writer
-                        while ((line = reader.readLine()) != null)
-                        {
-                            String firstValue = line.split(",")[0];
-                            if (isNumeric(firstValue))
-                                writer.append(line.replace("|", ",")).append(nr);
+                            // To skip the header from the second file
+                            if (firstFile)
+                            {
+                                header = reader.readLine()
+                                        .replace("SOIL_ID","SoilProfileID")
+                                        .replace("LATI","LAT")
+                                        .replace("TNAM","TNAM,WeatherSequence")
+                                        .replace("CR","CropCode")
+                                        .replace("FNAM","CultivarCode");     // Replace SOIL_ID with SoilProfileID
+                                writer.append(header).append(nr);
+                                firstFile = false;
+                            }
+
+                            // Reader --> Writer
+                            while ((line = reader.readLine()) != null)
+                            {
+                                String firstValue = line.split(",")[0];
+                                if (isNumeric(firstValue))
+                                    writer.append(line.replace("|", ",")).append(nr);
+                            }
                         }
+                        writer.close();
+                        System.out.println("> Output files merged: "+combinedOutput);
                     }
-                    writer.close();
-                    System.out.println("> Output files merged for "+climateOption);
-                }
-                catch (Exception ex)
-                {
-                    ex.printStackTrace();
-                }
+                    catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                    }
 
-            } //if (step5)
+                    // Delete temporary files for the next batch of runs
+                    try
+                    {
+                        FileUtils.cleanDirectory(new File(directoryOutput));
+                        throw new IOException("> Unable to delete temporary files...");
+                    }
+                    catch (IOException ex)
+                    {
+                    }
+
+                } //if (step5)
+
+            } //for (String wth: weatherInfo)
 
         } // for (climate)
 
@@ -375,7 +396,7 @@ public class App
                     Object[] r = future.get();
                     String weatherKey = (String) r[0];
                     int plantingDate = (Integer) r[1];
-                    //int plantingDate = 135;  // <-- Per Tim Thomas' specification
+                    if (useFixedPlantingDate) plantingDate = fixedPlantingDate;
                     plantingDatesToSimulate.put(weatherKey, plantingDate);
                 }
                 executor.shutdown();
@@ -667,7 +688,7 @@ public class App
 
 
     // Run seasonal simulations
-    public static void runSeasonalSimulations(Object[] unitInfo, String[] weatherInfo,
+    public static void runSeasonalSimulations(Object[] unitInfo, String wth,
                                               TreeMap<Object, Object> plantingDatesToSimulate, String climateOption,
                                               TreeMap<Object, Object> daysToFloweringByCultivar,
                                               int firstPlantingYear, TreeMap<Integer, Integer> co2History)
@@ -695,7 +716,7 @@ public class App
                     if (i < numberOfUnits)
                     {
 
-                        //Unit Information
+                        // Unit Information
                         Object[] ou = (Object[]) unitInfo[i];
                         String season = (String) ou[12];
 
@@ -719,17 +740,14 @@ public class App
                             System.out.println("> Default phenology values used for "+cropCultivarCode);
                         }
 
-                        // Multiple weather files for this unit
-                        for (String weatherFileName: weatherInfo)
-                        {
-                            String weatherKey = weatherFileName.split("\\.")[0] + "_" + season + "_" + cropCode;
-                            int p = (int)plantingDatesToSimulate.get(weatherKey);
-                            Object[] weatherAndPlantingDate = { weatherFileName, p };
+                        // Weather file and planting date
+                        String weatherKey = wth.split("\\.")[0] + "_" + season + "_" + cropCode;
+                        int p = (int)plantingDatesToSimulate.get(weatherKey);
+                        Object[] weatherAndPlantingDate = { wth, p };
 
-                            // Multiple threads
-                            Future<Integer> future = executor.submit(new ThreadSeasonalRuns(ou, weatherAndPlantingDate, cultivarOption, daysToFlowering, daysToHarvest, climateOption, progress, firstPlantingYear, co2History));
-                            futures.add(future);
-                        }
+                        // Multiple threads
+                        Future<Integer> future = executor.submit(new ThreadSeasonalRuns(ou, weatherAndPlantingDate, cultivarOption, daysToFlowering, daysToHarvest, climateOption, progress, firstPlantingYear, co2History));
+                        futures.add(future);
 
                     }
                 }

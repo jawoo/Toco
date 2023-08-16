@@ -1,7 +1,7 @@
 tableNameUnitInformation: unit_information
 countryCode: ETH
 numberOfThreads: 1
-limitForDebugging: 0
+limitForDebugging: 1
 directory:
   weather: 2022-12_tt9106r2_debug
   working: res
@@ -26,13 +26,16 @@ scenarioSwitch:
   plantingWindow: 0
   plantingDensity: 0
   CO2fertilization: 1
+plantingDateOptions:
+  useFixedPlantingDate: 1
+  fixedPlantingDate: 135
 useRecommendedNitrogenFertilizerRate: 0
 nitrogenFertilizerRates:
   - 0
-  - 30
-  - 90
-  - 150
+#  - 30
+#  - 90
+#  - 150
 atmosphericCO2:
   - 350
-  - 450
-  - 550
+#  - 450
+#  - 550
