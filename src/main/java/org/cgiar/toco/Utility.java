@@ -194,7 +194,8 @@ public class Utility
 
 
     // Writing a file
-    static void writeFile(String fileName, String fileContent) throws InterruptedException {
+    static void writeFile(String fileName, String fileContent) throws InterruptedException
+    {
 
         // Destination file
         int maxTries = 10;
@@ -209,7 +210,7 @@ public class Utility
             }
             catch (IOException ex)
             {
-                Thread.sleep(100);
+                Thread.sleep(500);
                 System.out.println("> Failed to write "+fileName+" ("+(count+1)+"/"+maxTries+")");
             }
         }
@@ -362,5 +363,33 @@ public class Utility
         }
         return String.valueOf(pd);
     }
+
+
+
+    // Delete temporary output files from the [summary] directory to save storage space
+    public static void deleteSummaryFiles(String wthCode) throws InterruptedException
+    {
+        File folder = new File(App.directoryOutput);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith("_Q"+wthCode+".csv"));
+        for (File file : files)
+        {
+            if (!file.delete())
+            {
+
+                // wait a bit then retry on Windows
+                if (file.exists())
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Thread.sleep(500);
+                        System.gc();
+                        if (file.delete())
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
 
 }

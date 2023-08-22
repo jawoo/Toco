@@ -119,7 +119,7 @@ public class ThreadSeasonalRuns implements Callable<Integer>
             {
 
                 // All combinations
-                int wMax = 2, fMax = 2, mMax = 2, rMax = 2, pMax = 2, dMax = 2, cMax = 2;
+                int wMax = 2, fMax = 2, mMax = 2, rMax = 2, pMax = 2, dMax = 2;
 
                 // Or not
                 if (!App.switchScenarios[0]) wMax = 1;
@@ -128,7 +128,6 @@ public class ThreadSeasonalRuns implements Callable<Integer>
                 if (!App.switchScenarios[3]) rMax = 1;
                 if (!App.switchScenarios[4]) pMax = 1;
                 if (!App.switchScenarios[5]) dMax = 1;
-                if (!App.switchScenarios[6]) cMax = 1;
 
                 // Looping
                 for (int w=0; w<wMax; w++)
@@ -137,11 +136,18 @@ public class ThreadSeasonalRuns implements Callable<Integer>
                             for (int r=0; r<rMax; r++)
                                 for (int p=0; p<pMax; p++)
                                     for (int d=0; d<dMax; d++)
-                                        for (int c=0; c<cMax; c++)
-                                        {
-                                            int[] scn = { w, f, m, r, p, d, c };
-                                            scenarios.add(scn);
-                                        }
+                                    {
+
+                                        // For CO2 fertilization, if the switch is on, no need to simulate the baseline value.
+                                        int[] scn;
+                                        if (App.switchScenarios[6])
+                                            scn = new int[]{ w, f, m, r, p, d, 1 };
+                                        else
+                                            scn = new int[]{ w, f, m, r, p, d, 0 };
+                                        scenarios.add(scn);
+
+                                    }
+
 
             }
             else
@@ -349,7 +355,7 @@ public class ThreadSeasonalRuns implements Callable<Integer>
                         if (exitCode == 0)
                         {
                             File outputSource = new File(App.directoryThreads + "T" + threadID + App.d + "summary.csv");
-                            File outputDestination = new File(App.directoryOutput + "U" + unitId + "_C" + cell5m + "_" + climateOption + "_S" + s + "_" + runLabel + "_" + weatherSequence + ".csv");
+                            File outputDestination = new File(App.directoryOutput + "U" + unitId + "_C" + cell5m + "_" + climateOption + "_S" + s + "_" + runLabel + "_Q" + weatherSequence + ".csv");
                             outputDestination.setReadable(true, false);
                             outputDestination.setExecutable(true, false);
                             outputDestination.setWritable(true, false);

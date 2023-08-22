@@ -96,7 +96,7 @@ public class App
             scenarioCombinations = (int)config.get("scenarioCombinations") > 0;
 
             // N fertilizer rate?
-            useRecommendedNitrogenFertilizerRate = (int)config.get("scenarioCombinations") > 0;
+            useRecommendedNitrogenFertilizerRate = (int)config.get("useRecommendedNitrogenFertilizerRate") > 0;
 
             // Parse N fertilizer rate values
             List<Integer> nitrogenFertilizerRatesList = (List<Integer>) config.get("nitrogenFertilizerRates");
@@ -277,6 +277,8 @@ public class App
             System.out.println("> Running seasonal simulations...");
             for (String wth: weatherInfo)
             {
+
+                // Run by WTH
                 runSeasonalSimulations(unitInfo, wth, plantingDatesToSimulate, climateOption, daysToFloweringByCultivar, firstPlantingYear, co2History);
 
                 /*
@@ -288,11 +290,11 @@ public class App
                     String[] outputFileNames = getFileNames(directoryOutput, "_"+climateOption);
                     Date date = new Date();
                     long timeStamp = date.getTime();
+                    String wthCode = wth.split("[.]")[0];
 
                     // Write
                     try
                     {
-                        String wthCode = wth.split("[.]")[0];
                         String combinedOutput = directoryFinal+"toco_combinedOutput_"+climateOption+"_"+wthCode+"_"+timeStamp+".csv";
                         BufferedWriter writer = new BufferedWriter(new FileWriter(combinedOutput));
 
@@ -335,11 +337,11 @@ public class App
                     // Delete temporary files for the next batch of runs
                     try
                     {
-                        FileUtils.cleanDirectory(new File(directoryOutput));
-                        throw new IOException("> Unable to delete temporary files...");
+                        Utility.deleteSummaryFiles(wthCode);
                     }
-                    catch (IOException ex)
+                    catch (Exception ex)
                     {
+                        System.out.println("> Failed to delete summary files for "+wthCode);
                     }
 
                 } //if (step5)
