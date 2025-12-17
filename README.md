@@ -14,7 +14,7 @@ git clone https://github.com/dssat/dssat-csm-os
 cd dssat-csm-os
 mkdir release
 cd release
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 make
 ```
 Or, Ubuntu:
