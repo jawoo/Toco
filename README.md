@@ -11,7 +11,7 @@ sudo yum install cmake
 mkdir codebase
 cd codebase
 git clone https://github.com/dssat/dssat-csm-os
-cd dscsm-csm-os
+cd dssat-csm-os
 mkdir release
 cd release
 cmake -DCMAKE_BUILD_TYPE=Release ..
