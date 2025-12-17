@@ -5,6 +5,7 @@ Amazon Linux 2:
 ```
 sudo yum install gcc-gfortran
 sudo yum install glibc-static
+sudo yum install libgfortran-static
 sudo yum install git
 sudo yum install maven
 sudo yum install cmake
@@ -17,25 +18,9 @@ cd release
 cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 make
 ```
-Or, Ubuntu:
-```
-sudo apt install gfortran
-sudo apt install cmake
-sudo apt install maven
-mkdir codebase
-cd codebase
-git clone https://github.com/dssat/dssat-csm-os
-cd dscsm-csm-os
-mkdir release
-cd release
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make
-```
 Now you have the DSSAT executable file ready to go.
 
 ## 2. Cloning Toco from this repo
-(Toucan is the cute name I gave to my Java program that batch-runs DSSAT)
-
 ```
 cd ~/codebase
 git clone https://github.com/jawoo/Toco
