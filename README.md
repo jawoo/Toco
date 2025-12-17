@@ -3,6 +3,7 @@
 ## 1. Compiling DSSAT
 Amazon Linux 2:
 ```
+sudo yum install java
 sudo yum install gcc-gfortran
 sudo yum install glibc-static
 sudo yum install libgfortran-static
@@ -31,7 +32,9 @@ mvn clean compile assembly:single
 ## 3. Copy DSSAT files to the resource directory
 For the sake of simplicity, I keep *all* files into one directory with no subdirectories.
 ```
-cd ~/codebase/Toco/res
+cd ~/codebase/Toco
+mkdir res
+cd res
 mkdir -p .csm .temp result threads
 cp ~/codebase/dssat-csm-os/Data/* ./.csm
 cp ~/codebase/dssat-csm-os/Data/BatchFiles/* ./.csm
