@@ -1,13 +1,10 @@
 # Toco
 
 ## 1. Compiling DSSAT
-Amazon Linux 2:
+Ubuntu:
 ```
-sudo yum install java
-sudo yum install gcc-gfortran
-sudo yum install glibc-static
-sudo yum install libgfortran-static
-sudo yum install git
+sudo apt install openjdk-21-jre-headless
+sudo yum install gfortran
 sudo yum install maven
 sudo yum install cmake
 mkdir codebase
@@ -16,7 +13,7 @@ git clone https://github.com/dssat/dssat-csm-os
 cd dssat-csm-os
 mkdir release
 cd release
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE
+cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make
 ```
 Now you have the DSSAT executable file ready to go.
